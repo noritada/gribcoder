@@ -1,0 +1,23 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+
+[tool.poetry]
+name = "gribgen"
+version = "0.1.0"
+description = ""
+authors = ["Noritada Kobayashi <noritada.kobayashi@gmail.com>"]
+
+[tool.poetry.dependencies]
+nptyping = "^2.3"
+numpy = "^1.17"
+python = ">=3.7,<3.11"
+
+[tool.poetry.dev-dependencies]
+black = "^22"
+flake8 = "^5"
+isort = "^5"
+pytest = "^7.1.3"
