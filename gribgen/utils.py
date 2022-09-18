@@ -15,6 +15,12 @@ def create_sect_header(num: int, length: int) -> np.ndarray:
     return np.array([(length, num)], dtype=SECT_HEADER_DTYPE)
 
 
+def grib_int(num: int, byte_length: int) -> int:
+    if num < 0:
+        num = set_bit_one(-num, (byte_length * 8 - 1))
+    return num
+
+
 # There might be more direct and efficient solutions for the following conversions.
 
 

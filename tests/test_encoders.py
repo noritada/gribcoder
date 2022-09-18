@@ -27,6 +27,18 @@ def test_simple_packing_encoding(data, r, e, d, expected):
     np.testing.assert_array_equal(actual, expected)
 
 
+def test_sect5_writing():
+    data = np.arange(0, 16)
+    encoder = SimplePackingEncoder(1.0, 1, 1, 16).data(data)
+
+    with BytesIO() as f:
+        encoder.write_sect5(f)
+        actual = f.getvalue()
+
+    expected = b"\x00\x00\x00\x15\x05\x00\x00\x00\x10\x00\x00\x3f\x80\x00\x00\x00\x01\x00\x01\x10\x01"
+    np.testing.assert_array_equal(actual, expected)
+
+
 def test_sect7_writing():
     data = np.arange(0, 4)
     encoder = SimplePackingEncoder(0.0, 0, 0, 16).data(data)
