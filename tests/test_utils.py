@@ -1,6 +1,12 @@
 import numpy as np
 
-from gribgen.utils import bytes_from_float, bytes_from_int
+from gribgen.utils import bytes_from_float, bytes_from_int, create_sect_header
+
+
+def test_sect_header_creation():
+    actual = create_sect_header(5, 255).tobytes()
+    expected = b"\x00\x00\x00\xff\x05"
+    assert actual == expected
 
 
 def test_bytes_from_positive_int():

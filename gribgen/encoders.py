@@ -3,7 +3,7 @@ from typing import BinaryIO
 
 import numpy as np
 
-from gribgen.utils import bytes_from_int
+from gribgen.utils import SECT_HEADER_DTYPE, create_sect_header
 
 
 @dataclasses.dataclass
@@ -41,9 +41,8 @@ class SimplePackingEncoder:
 
     def write_sect7(self, f: BinaryIO):
         """Writes encoded data to the stream as Section 7 octet sequence."""
-        encoded = self.encode()
-        encoded = np.frombuffer(encoded.tobytes(), dtype=np.uint8)
-        sect_len = len(encoded) + 5
-        f.write(bytes_from_int(sect_len, 4))
-        f.write(bytes_from_int(0x07, 1))
+        encoded = self.encode().tobytes()
+        sect_len = SECT_HEADER_DTYPE.itemsize + len(encoded)
+        header = create_sect_header(7, sect_len)
+        f.write(header)
         f.write(encoded)

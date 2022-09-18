@@ -3,6 +3,18 @@ import struct
 import numpy as np
 from nptyping import NDArray, Shape, UInt8
 
+SECT_HEADER_DTYPE = np.dtype(
+    [
+        ("sect_len", ">u4"),
+        ("sect_num", "u1"),
+    ]
+)
+
+
+def create_sect_header(num: int, length: int) -> np.ndarray:
+    return np.array([(length, num)], dtype=SECT_HEADER_DTYPE)
+
+
 # There might be more direct and efficient solutions for the following conversions.
 
 
