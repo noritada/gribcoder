@@ -1,9 +1,15 @@
+from contextlib import contextmanager
 from io import BytesIO
 
 import numpy as np
 import pytest
 
 from gribgen.encoders import SimplePackingEncoder
+
+
+@contextmanager
+def does_not_raise():
+    yield
 
 
 @pytest.mark.parametrize(
@@ -52,3 +58,27 @@ def test_sect7_writing():
 
     expected = b"\x00\x00\x00\x0d\x07\x00\x00\x00\x01\x00\x02\x00\x03"
     np.testing.assert_array_equal(actual, expected)
+
+
+@pytest.mark.parametrize(
+    "data,r,e,d,expectation,error_message",
+    [
+        (np.arange(0, 4), 0.0, 0, 0, does_not_raise(), None),
+        (
+            np.array([np.nan, 0]),
+            0.0,
+            0,
+            0,
+            pytest.raises(RuntimeError),
+            "data contains NaN values",
+        ),
+    ],
+)
+def test_errors_in_sect7_writing(data, r, e, d, expectation, error_message):
+    encoder = SimplePackingEncoder(r, e, d, 16).data(data)
+    with expectation as e:
+        with BytesIO() as f:
+            encoder.write_sect5(f)
+
+    if e is not None:
+        assert str(e.value) == error_message

@@ -25,6 +25,10 @@ class SimplePackingEncoder:
             return self._encoded
         if self._data is None:
             raise RuntimeError("data is not specified")
+        if np.isnan(self._data).any():
+            # if the data contains NaN, encoding itself succeeds, but proper values
+            # cannot be written out, so we raise an exception
+            raise RuntimeError("data contains NaN values")
         dtype = self._determine_dtype()
         encoded = (self._data * 10**self.d - self.r) * 2 ** (-self.e)
         self._encoded = np.round(encoded).astype(dtype)
