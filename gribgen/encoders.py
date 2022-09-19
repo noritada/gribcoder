@@ -2,6 +2,7 @@ import dataclasses
 from typing import BinaryIO
 
 import numpy as np
+from nptyping import Bool, NDArray, Shape, UInt8
 
 from gribgen.utils import SECT_HEADER_DTYPE, create_sect_header, grib_int
 
@@ -14,25 +15,39 @@ class SimplePackingEncoder:
     n: int
 
     def data(self, data: np.ndarray):  # `-> Self` for Python >=3.11 (PEP 673)
-        """Sets data to be encoded."""
+        """Sets input data to be encoded.
+
+        The input must be an instance of `np.ndarray` or `np.ma.MaskedArray`. If it is
+        an `np.ma.MaskedArray`, a bitmap is also created in the process of the
+        encoding; otherwise, no bitmap is created.
+        """
         self._data = data
         self._encoded = None
         return self
 
-    def encode(self):
-        """Packs and return as an `np.ndarray` with `n` bits occupied by each element."""
+    def encode(self) -> tuple[np.ndarray, np.ndarray]:
+        """Packs and returns two `np.ndarray`s. The first one is an array containing
+        encoded values with `n` bits occupied for each element, and the second one is a
+        bitmap array."""
         if self._encoded is not None:
-            return self._encoded
+            return (self._encoded, self._bitmap)
         if self._data is None:
             raise RuntimeError("data is not specified")
-        if np.isnan(self._data).any():
+        if isinstance(self._data, np.ma.MaskedArray):
+            input_ = self._data[~self._data.mask]
+            bitmap = create_bitmap(self._data.mask)
+        else:
+            input_ = self._data
+            bitmap = None
+        if np.isnan(input_).any():
             # if the data contains NaN, encoding itself succeeds, but proper values
             # cannot be written out, so we raise an exception
             raise RuntimeError("data contains NaN values")
         dtype = self._determine_dtype()
-        encoded = (self._data * 10**self.d - self.r) * 2 ** (-self.e)
+        encoded = (input_ * 10**self.d - self.r) * 2 ** (-self.e)
         self._encoded = np.round(encoded).astype(dtype)
-        return self._encoded
+        self._bitmap = bitmap
+        return (self._encoded, self._bitmap)
 
     def _determine_dtype(self):
         if self.n == 8:
@@ -48,7 +63,8 @@ class SimplePackingEncoder:
 
     def write_sect5(self, f: BinaryIO):
         """Writes parameter data to the stream as Section 5 octet sequence."""
-        num_of_values = len(self.encode())
+        encoded, _ = self.encode()
+        num_of_values = len(encoded)
         main_dtype = np.dtype(
             [
                 ("num_of_values", ">u4"),
@@ -88,10 +104,44 @@ class SimplePackingEncoder:
         f.write(main_buf)
         f.write(template_buf)
 
+    def write_sect6(self, f: BinaryIO):
+        """Writes bitmap data to the stream as Section 6 octet sequence."""
+        _, bitmap = self.encode()
+
+        main_dtype = np.dtype(
+            [
+                ("bitmap_indicator", "u1"),
+            ]
+        )
+        if bitmap is None:
+            main_buf = np.array([(0xFF)], dtype=main_dtype)
+            bitmap = np.array([], dtype=">u8")
+        else:
+            main_buf = np.array([(0x00)], dtype=main_dtype)
+
+        sect_len = SECT_HEADER_DTYPE.itemsize + main_dtype.itemsize + len(bitmap)
+        header = create_sect_header(6, sect_len)
+        f.write(header)
+        f.write(main_buf)
+        f.write(bitmap)
+
     def write_sect7(self, f: BinaryIO):
         """Writes encoded data to the stream as Section 7 octet sequence."""
-        encoded = self.encode().tobytes()
+        encoded, _ = self.encode()
+        encoded = encoded.tobytes()
         sect_len = SECT_HEADER_DTYPE.itemsize + len(encoded)
         header = create_sect_header(7, sect_len)
         f.write(header)
         f.write(encoded)
+
+
+def create_bitmap(mask: NDArray[Shape["*"], Bool]) -> NDArray[Shape["*"], UInt8]:
+    """Creates a bitmap octets corresponding to `mask`.
+
+    In the input `mask`, True (1) must means that data is masked (missing).
+    In the output bitmap, 0 means data is missing and 1 means data is present."""
+    extra_len = len(mask) % 8
+    n_pad = 0 if extra_len == 0 else 8 - extra_len
+    array = np.pad(mask, (0, n_pad), constant_values=True).reshape(-1, 8)
+    bits = np.packbits(~array, axis=-1).ravel()
+    return bits

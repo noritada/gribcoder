@@ -4,7 +4,7 @@ from io import BytesIO
 import numpy as np
 import pytest
 
-from gribgen.encoders import SimplePackingEncoder
+from gribgen.encoders import SimplePackingEncoder, create_bitmap
 
 
 @contextmanager
@@ -13,7 +13,7 @@ def does_not_raise():
 
 
 @pytest.mark.parametrize(
-    "data,r,e,d,expected",
+    "data,r,e,d,expected_encoded,expected_bitmap",
     [
         (
             np.array([0, 0.25, 0.50, 1, 2, 4, 8, 16, 32, 64, 128]),
@@ -23,40 +23,118 @@ def does_not_raise():
             np.array(
                 [0, 25, 50, 100, 200, 400, 800, 1600, 3200, 6400, 12800], dtype=">u2"
             ),
+            None,
         ),
-        (np.arange(0, 4), 0.0, 0, 0, np.arange(0, 4, dtype=">u2")),
+        (np.arange(0, 4), 0.0, 0, 0, np.arange(0, 4, dtype=">u2"), None),
+        (
+            np.ma.array(
+                [0, 0.25, 0.50, 1, 2, 4, 8, 16, 32, 64, 128],
+                mask=[0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0],
+            ),
+            0.0,
+            0,
+            2,
+            np.array([0, 50, 100, 800, 1600, 12800], dtype=">u2"),
+            np.array([0b10110011, 0b00100000], dtype=">u2"),
+        ),
     ],
 )
-def test_simple_packing_encoding(data, r, e, d, expected):
+def test_simple_packing_encoding(data, r, e, d, expected_encoded, expected_bitmap):
     encoder = SimplePackingEncoder(r, e, d, 16).data(data)
-    actual = encoder.encode()
-    np.testing.assert_array_equal(actual, expected)
+    actual_encoded, actual_bitmap = encoder.encode()
+    np.testing.assert_array_equal(actual_encoded, expected_encoded)
+    np.testing.assert_array_equal(actual_bitmap, expected_bitmap)
 
 
-def test_sect5_writing():
-    data = np.arange(0, 16)
-    encoder = SimplePackingEncoder(1.0, 1, 1, 16).data(data)
-
+@pytest.mark.parametrize(
+    "data,r,e,d,expected",
+    [
+        (
+            np.arange(0, 16),
+            1.0,
+            1,
+            1,
+            b"\x00\x00\x00\x15\x05\x00\x00\x00\x10\x00\x00\x3f\x80\x00\x00\x00"
+            + b"\x01\x00\x01\x10\x01",
+        ),
+        (
+            np.ma.array(
+                [0, 0.25, 0.50, 1, 2, 4, 8, 16, 32, 64, 128],
+                mask=[0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0],
+            ),
+            0.0,
+            0,
+            2,
+            b"\x00\x00\x00\x15\x05\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00"
+            + b"\x00\x00\x02\x10\x00",
+        ),
+    ],
+)
+def test_sect5_writing(data, r, e, d, expected):
+    encoder = SimplePackingEncoder(r, e, d, 16).data(data)
     with BytesIO() as f:
         encoder.write_sect5(f)
         actual = f.getvalue()
-
-    expected = (
-        b"\x00\x00\x00\x15\x05\x00\x00\x00\x10\x00\x00\x3f\x80\x00\x00\x00"
-        + b"\x01\x00\x01\x10\x01"
-    )
     np.testing.assert_array_equal(actual, expected)
 
 
-def test_sect7_writing():
-    data = np.arange(0, 4)
-    encoder = SimplePackingEncoder(0.0, 0, 0, 16).data(data)
+@pytest.mark.parametrize(
+    "data,r,e,d,expected",
+    [
+        (
+            np.arange(0, 4),
+            0.0,
+            0,
+            0,
+            b"\x00\x00\x00\x06\x06\xff",
+        ),
+        (
+            np.ma.array(
+                [0, 0.25, 0.50, 1, 2, 4, 8, 16, 32, 64, 128],
+                mask=[0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0],
+            ),
+            0.0,
+            0,
+            2,
+            b"\x00\x00\x00\x08\x06\x00\xb3\x20",
+        ),
+    ],
+)
+def test_sect6_writing(data, r, e, d, expected):
+    encoder = SimplePackingEncoder(r, e, d, 16).data(data)
+    with BytesIO() as f:
+        encoder.write_sect6(f)
+        actual = f.getvalue()
+    np.testing.assert_array_equal(actual, expected)
 
+
+@pytest.mark.parametrize(
+    "data,r,e,d,expected",
+    [
+        (
+            np.arange(0, 4),
+            0.0,
+            0,
+            0,
+            b"\x00\x00\x00\x0d\x07\x00\x00\x00\x01\x00\x02\x00\x03",
+        ),
+        (
+            np.ma.array(
+                [0, 0.25, 0.50, 1, 2, 4, 8, 16, 32, 64, 128],
+                mask=[0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0],
+            ),
+            0.0,
+            0,
+            2,
+            b"\x00\x00\x00\x11\x07\x00\x00\x00\x32\x00\x64\x03\x20\x06\x40\x32\x00",
+        ),
+    ],
+)
+def test_sect7_writing(data, r, e, d, expected):
+    encoder = SimplePackingEncoder(r, e, d, 16).data(data)
     with BytesIO() as f:
         encoder.write_sect7(f)
         actual = f.getvalue()
-
-    expected = b"\x00\x00\x00\x0d\x07\x00\x00\x00\x01\x00\x02\x00\x03"
     np.testing.assert_array_equal(actual, expected)
 
 
@@ -82,3 +160,62 @@ def test_errors_in_sect7_writing(data, r, e, d, expectation, error_message):
 
     if e is not None:
         assert str(e.value) == error_message
+
+
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        ([True, False, True, True, False, False], [0b01001100]),
+        (
+            [
+                True,
+                False,
+                True,
+                True,
+                False,
+                False,
+                True,
+                True,
+                True,
+                False,
+                False,
+                False,
+                True,
+                True,
+                True,
+                True,
+            ],
+            [0b01001100, 0b01110000],
+        ),
+        (
+            [
+                True,
+                False,
+                True,
+                True,
+                False,
+                False,
+                True,
+                True,
+                True,
+                False,
+                False,
+                False,
+                True,
+                True,
+                True,
+                True,
+                False,
+                False,
+                False,
+                False,
+            ],
+            [0b01001100, 0b01110000, 0b11110000],
+        ),
+    ],
+)
+def test_bitmap_creation(input, expected):
+    input = np.array(input)
+    actual = create_bitmap(input)
+    expected = np.array(expected, dtype=np.uint8)
+    np.testing.assert_array_equal(actual, expected)
