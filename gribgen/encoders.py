@@ -1,4 +1,5 @@
 import dataclasses
+from abc import ABC, abstractmethod
 from typing import BinaryIO
 
 import numpy as np
@@ -7,8 +8,22 @@ from nptyping import Bool, NDArray, Shape, UInt8
 from gribgen.utils import SECT_HEADER_DTYPE, create_sect_header, grib_int
 
 
+class BaseEncoder(ABC):
+    @abstractmethod
+    def write_sect5(self, f: BinaryIO):
+        pass
+
+    @abstractmethod
+    def write_sect6(self, f: BinaryIO):
+        pass
+
+    @abstractmethod
+    def write_sect7(self, f: BinaryIO):
+        pass
+
+
 @dataclasses.dataclass
-class SimplePackingEncoder:
+class SimplePackingEncoder(BaseEncoder):
     r: float
     e: int
     d: int

@@ -1,15 +1,10 @@
-from contextlib import contextmanager
 from io import BytesIO
 
+import helpers
 import numpy as np
 import pytest
 
 from gribgen.encoders import SimplePackingEncoder, create_bitmap
-
-
-@contextmanager
-def does_not_raise():
-    yield
 
 
 @pytest.mark.parametrize(
@@ -141,7 +136,7 @@ def test_sect7_writing(input, r, e, d, expected):
 @pytest.mark.parametrize(
     "input,r,e,d,expectation,error_message",
     [
-        (np.arange(0, 4), 0.0, 0, 0, does_not_raise(), None),
+        (np.arange(0, 4), 0.0, 0, 0, helpers.does_not_raise(), None),
         (
             np.array([np.nan, 0]),
             0.0,
