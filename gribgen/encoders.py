@@ -14,14 +14,14 @@ class SimplePackingEncoder:
     d: int
     n: int
 
-    def data(self, data: np.ndarray):  # `-> Self` for Python >=3.11 (PEP 673)
+    def input(self, data: np.ndarray):  # `-> Self` for Python >=3.11 (PEP 673)
         """Sets input data to be encoded.
 
         The input must be an instance of `np.ndarray` or `np.ma.MaskedArray`. If it is
         an `np.ma.MaskedArray`, a bitmap is also created in the process of the
         encoding; otherwise, no bitmap is created.
         """
-        self._data = data
+        self._input = data
         self._encoded = None
         return self
 
@@ -31,13 +31,13 @@ class SimplePackingEncoder:
         bitmap array."""
         if self._encoded is not None:
             return (self._encoded, self._bitmap)
-        if self._data is None:
+        if self._input is None:
             raise RuntimeError("data is not specified")
-        if isinstance(self._data, np.ma.MaskedArray):
-            input_ = self._data[~self._data.mask]
-            bitmap = create_bitmap(self._data.mask)
+        if isinstance(self._input, np.ma.MaskedArray):
+            input_ = self._input[~self._input.mask]
+            bitmap = create_bitmap(self._input.mask)
         else:
-            input_ = self._data
+            input_ = self._input
             bitmap = None
         if np.isnan(input_).any():
             # if the data contains NaN, encoding itself succeeds, but proper values
@@ -82,7 +82,7 @@ class SimplePackingEncoder:
                 ("type_of_original_field_values", "u1"),
             ]
         )
-        original_data_dtype = self._data.dtype
+        original_data_dtype = self._input.dtype
         if np.issubdtype(original_data_dtype, np.floating):
             field_type = 0
         elif np.issubdtype(original_data_dtype, np.integer):

@@ -13,7 +13,7 @@ def does_not_raise():
 
 
 @pytest.mark.parametrize(
-    "data,r,e,d,expected_encoded,expected_bitmap",
+    "input,r,e,d,expected_encoded,expected_bitmap",
     [
         (
             np.array([0, 0.25, 0.50, 1, 2, 4, 8, 16, 32, 64, 128]),
@@ -39,15 +39,15 @@ def does_not_raise():
         ),
     ],
 )
-def test_simple_packing_encoding(data, r, e, d, expected_encoded, expected_bitmap):
-    encoder = SimplePackingEncoder(r, e, d, 16).data(data)
+def test_simple_packing_encoding(input, r, e, d, expected_encoded, expected_bitmap):
+    encoder = SimplePackingEncoder(r, e, d, 16).input(input)
     actual_encoded, actual_bitmap = encoder.encode()
     np.testing.assert_array_equal(actual_encoded, expected_encoded)
     np.testing.assert_array_equal(actual_bitmap, expected_bitmap)
 
 
 @pytest.mark.parametrize(
-    "data,r,e,d,expected",
+    "input,r,e,d,expected",
     [
         (
             np.arange(0, 16),
@@ -70,8 +70,8 @@ def test_simple_packing_encoding(data, r, e, d, expected_encoded, expected_bitma
         ),
     ],
 )
-def test_sect5_writing(data, r, e, d, expected):
-    encoder = SimplePackingEncoder(r, e, d, 16).data(data)
+def test_sect5_writing(input, r, e, d, expected):
+    encoder = SimplePackingEncoder(r, e, d, 16).input(input)
     with BytesIO() as f:
         encoder.write_sect5(f)
         actual = f.getvalue()
@@ -79,7 +79,7 @@ def test_sect5_writing(data, r, e, d, expected):
 
 
 @pytest.mark.parametrize(
-    "data,r,e,d,expected",
+    "input,r,e,d,expected",
     [
         (
             np.arange(0, 4),
@@ -100,8 +100,8 @@ def test_sect5_writing(data, r, e, d, expected):
         ),
     ],
 )
-def test_sect6_writing(data, r, e, d, expected):
-    encoder = SimplePackingEncoder(r, e, d, 16).data(data)
+def test_sect6_writing(input, r, e, d, expected):
+    encoder = SimplePackingEncoder(r, e, d, 16).input(input)
     with BytesIO() as f:
         encoder.write_sect6(f)
         actual = f.getvalue()
@@ -109,7 +109,7 @@ def test_sect6_writing(data, r, e, d, expected):
 
 
 @pytest.mark.parametrize(
-    "data,r,e,d,expected",
+    "input,r,e,d,expected",
     [
         (
             np.arange(0, 4),
@@ -130,8 +130,8 @@ def test_sect6_writing(data, r, e, d, expected):
         ),
     ],
 )
-def test_sect7_writing(data, r, e, d, expected):
-    encoder = SimplePackingEncoder(r, e, d, 16).data(data)
+def test_sect7_writing(input, r, e, d, expected):
+    encoder = SimplePackingEncoder(r, e, d, 16).input(input)
     with BytesIO() as f:
         encoder.write_sect7(f)
         actual = f.getvalue()
@@ -139,7 +139,7 @@ def test_sect7_writing(data, r, e, d, expected):
 
 
 @pytest.mark.parametrize(
-    "data,r,e,d,expectation,error_message",
+    "input,r,e,d,expectation,error_message",
     [
         (np.arange(0, 4), 0.0, 0, 0, does_not_raise(), None),
         (
@@ -152,8 +152,8 @@ def test_sect7_writing(data, r, e, d, expected):
         ),
     ],
 )
-def test_errors_in_sect7_writing(data, r, e, d, expectation, error_message):
-    encoder = SimplePackingEncoder(r, e, d, 16).data(data)
+def test_errors_in_sect7_writing(input, r, e, d, expectation, error_message):
+    encoder = SimplePackingEncoder(r, e, d, 16).input(input)
     with expectation as e:
         with BytesIO() as f:
             encoder.write_sect5(f)
