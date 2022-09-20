@@ -1,4 +1,5 @@
 import io
+from datetime import datetime
 from typing import BinaryIO
 
 import helpers
@@ -6,6 +7,7 @@ import pytest
 
 from gribgen.context import Grib2MessageWriter
 from gribgen.encoders import BaseEncoder
+from gribgen.message import Identification
 
 
 class DummyEncoder(BaseEncoder):
@@ -48,13 +50,14 @@ class DummyEncoder(BaseEncoder):
 def test_section_order(order, expectation):
     with io.BytesIO() as fw:
         with expectation as e:
-            with Grib2MessageWriter(fw) as grib2:
+            ident = Identification(0, 0, 0, 0, 0, datetime.now(), 0, 0)
+            with Grib2MessageWriter(fw, ident) as grib2:
                 encoder = DummyEncoder()
                 for num in order:
                     if num == 0:
                         grib2._write_sect0()
                     elif num == 1:
-                        grib2._write_sect1()
+                        grib2._write_sect1(ident)
                     elif num == 2:
                         grib2._write_sect2()
                     elif num == 3:

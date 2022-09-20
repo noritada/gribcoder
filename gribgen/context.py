@@ -3,11 +3,13 @@ import dataclasses
 from typing import BinaryIO, Callable
 
 from .encoders import BaseEncoder
+from .message import Identification
 
 
 @dataclasses.dataclass
 class Grib2MessageWriter:
     f: BinaryIO
+    ident: Identification
     _last_sect_no: int = dataclasses.field(default=0, init=False)
     _start_pos: int = dataclasses.field(init=False)
 
@@ -37,7 +39,7 @@ class Grib2MessageWriter:
 
     def _write_sect1(self):
         with self._section_context(1):
-            pass  # not implemented
+            self.ident.write(self.f)
 
     def _write_sect2(self):
         with self._section_context(2, lambda x: x == 7):
