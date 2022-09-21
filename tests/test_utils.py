@@ -1,6 +1,6 @@
 import pytest
 
-from gribgen.utils import create_sect_header, grib_int
+from gribgen.utils import create_sect_header, grib_signed
 
 
 def test_sect_header_creation():
@@ -16,6 +16,6 @@ def test_sect_header_creation():
         (-1024, 4, 0x80000400),
     ],
 )
-def test_grib_int(input_, byte_length, expected):
-    actual = grib_int(input_, byte_length)
+def test_grib_signed(input_, byte_length, expected):
+    actual = grib_signed(input_, byte_length)
     assert actual == expected

@@ -5,7 +5,7 @@ from typing import BinaryIO
 import numpy as np
 from nptyping import Bool, NDArray, Shape, UInt8
 
-from gribgen.utils import SECT_HEADER_DTYPE, create_sect_header, grib_int
+from gribgen.utils import SECT_HEADER_DTYPE, create_sect_header, grib_signed
 
 
 class BaseEncoder(ABC):
@@ -91,8 +91,8 @@ class SimplePackingEncoder(BaseEncoder):
         template_dtype = np.dtype(
             [
                 ("reference_value", ">f4"),
-                ("binary_scale_factor", ">u2"),  # grib_int
-                ("decimal_scale_factor", ">u2"),  # grib_int
+                ("binary_scale_factor", ">u2"),  # grib_signed
+                ("decimal_scale_factor", ">u2"),  # grib_signed
                 ("bits_per_value", "u1"),
                 ("type_of_original_field_values", "u1"),
             ]
@@ -106,7 +106,15 @@ class SimplePackingEncoder(BaseEncoder):
             raise RuntimeError("unexpected dtype for original data values")
 
         template_buf = np.array(
-            [(self.r, grib_int(self.e, 2), grib_int(self.d, 2), self.n, field_type)],
+            [
+                (
+                    self.r,
+                    grib_signed(self.e, 2),
+                    grib_signed(self.d, 2),
+                    self.n,
+                    field_type,
+                )
+            ],
             dtype=template_dtype,
         )
 
