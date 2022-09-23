@@ -70,7 +70,7 @@ def test_sect5_writing(input, r, e, d, expected):
     with BytesIO() as f:
         encoder.write_sect5(f)
         actual = f.getvalue()
-    np.testing.assert_array_equal(actual, expected)
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -100,7 +100,7 @@ def test_sect6_writing(input, r, e, d, expected):
     with BytesIO() as f:
         encoder.write_sect6(f)
         actual = f.getvalue()
-    np.testing.assert_array_equal(actual, expected)
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -130,7 +130,7 @@ def test_sect7_writing(input, r, e, d, expected):
     with BytesIO() as f:
         encoder.write_sect7(f)
         actual = f.getvalue()
-    np.testing.assert_array_equal(actual, expected)
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
