@@ -6,6 +6,12 @@ import numpy as np
 
 from gribgen.utils import SECT_HEADER_DTYPE, create_sect_header
 
+DTYPE_SECTION_0_DISCIPLINE = np.dtype(
+    [
+        ("discipline", "u1"),
+    ]
+)
+
 DTYPE_SECTION_1 = np.dtype(
     [
         ("centre", ">u2"),
@@ -23,6 +29,18 @@ DTYPE_SECTION_1 = np.dtype(
         ("type_of_processed_data", "u1"),
     ]
 )
+
+
+@dataclasses.dataclass
+class Indicator:
+    discipline: int
+
+    def write(self, f: BinaryIO):
+        discipline_buf = np.array([(self.discipline)], dtype=DTYPE_SECTION_0_DISCIPLINE)
+
+        f.write(b"GRIB\xff\xff")
+        f.write(discipline_buf)
+        f.write(b"\x02\x00\x00\x00\x00\x00\x00\x00\x00")
 
 
 @dataclasses.dataclass

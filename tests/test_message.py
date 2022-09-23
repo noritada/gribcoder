@@ -1,7 +1,16 @@
 from datetime import datetime
 from io import BytesIO
 
-from gribgen.message import Identification
+from gribgen.message import Identification, Indicator
+
+
+def test_indicator():
+    ind = Indicator(0)
+    with BytesIO() as f:
+        ind.write(f)
+        actual = f.getvalue()
+    expected = b"GRIB\xff\xff\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00"
+    assert actual == expected
 
 
 def test_identification():
