@@ -10,16 +10,16 @@ from gribgen.utils import SECT_HEADER_DTYPE, create_sect_header, grib_signed
 
 class BaseEncoder(ABC):
     @abstractmethod
-    def write_sect5(self, f: BinaryIO):
-        pass
+    def write_sect5(self, f: BinaryIO) -> int:
+        return 0
 
     @abstractmethod
-    def write_sect6(self, f: BinaryIO):
-        pass
+    def write_sect6(self, f: BinaryIO) -> int:
+        return 0
 
     @abstractmethod
-    def write_sect7(self, f: BinaryIO):
-        pass
+    def write_sect7(self, f: BinaryIO) -> int:
+        return 0
 
 
 @dataclasses.dataclass
@@ -76,7 +76,7 @@ class SimplePackingEncoder(BaseEncoder):
         else:
             raise RuntimeError("n other than 8, 16, 32, and 64 is not supported")
 
-    def write_sect5(self, f: BinaryIO):
+    def write_sect5(self, f: BinaryIO) -> int:
         """Writes parameter data to the stream as Section 5 octet sequence."""
         encoded, _ = self.encode()
         num_of_values = len(encoded)
@@ -126,8 +126,9 @@ class SimplePackingEncoder(BaseEncoder):
         f.write(header)
         f.write(main_buf)
         f.write(template_buf)
+        return sect_len
 
-    def write_sect6(self, f: BinaryIO):
+    def write_sect6(self, f: BinaryIO) -> int:
         """Writes bitmap data to the stream as Section 6 octet sequence."""
         _, bitmap = self.encode()
 
@@ -147,8 +148,9 @@ class SimplePackingEncoder(BaseEncoder):
         f.write(header)
         f.write(main_buf)
         f.write(bitmap)
+        return sect_len
 
-    def write_sect7(self, f: BinaryIO):
+    def write_sect7(self, f: BinaryIO) -> int:
         """Writes encoded data to the stream as Section 7 octet sequence."""
         encoded, _ = self.encode()
         encoded = encoded.tobytes()
@@ -156,6 +158,7 @@ class SimplePackingEncoder(BaseEncoder):
         header = create_sect_header(7, sect_len)
         f.write(header)
         f.write(encoded)
+        return sect_len
 
 
 def create_bitmap(mask: NDArray[Shape["*"], Bool]) -> NDArray[Shape["*"], UInt8]:

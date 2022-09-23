@@ -6,9 +6,13 @@ import numpy as np
 
 from gribgen.utils import SECT_HEADER_DTYPE, create_sect_header
 
-DTYPE_SECTION_0_DISCIPLINE = np.dtype(
+DTYPE_SECTION_0 = np.dtype(
     [
+        ("identifier", ">u4"),  # treat as a number for simplicity
+        ("reserved", ">u2"),
         ("discipline", "u1"),
+        ("edition_number", "u1"),
+        ("total_length", ">u8"),
     ]
 )
 
@@ -34,13 +38,16 @@ DTYPE_SECTION_1 = np.dtype(
 @dataclasses.dataclass
 class Indicator:
     discipline: int
+    total_length: int = 0
 
-    def write(self, f: BinaryIO):
-        discipline_buf = np.array([(self.discipline)], dtype=DTYPE_SECTION_0_DISCIPLINE)
+    def write(self, f: BinaryIO) -> int:
+        section_buf = np.array(
+            [(0x47524942, 0xFFFF, self.discipline, 2, self.total_length)],
+            dtype=DTYPE_SECTION_0,
+        )
 
-        f.write(b"GRIB\xff\xff")
-        f.write(discipline_buf)
-        f.write(b"\x02\x00\x00\x00\x00\x00\x00\x00\x00")
+        f.write(section_buf)
+        return DTYPE_SECTION_0.itemsize
 
 
 @dataclasses.dataclass
@@ -54,7 +61,7 @@ class Identification:
     production_status_of_processed_data: int
     type_of_processed_data: int
 
-    def write(self, f: BinaryIO):
+    def write(self, f: BinaryIO) -> int:
         section_buf = np.array(
             [
                 (
@@ -81,3 +88,4 @@ class Identification:
         header = create_sect_header(1, sect_len)
         f.write(header)
         f.write(section_buf)
+        return sect_len

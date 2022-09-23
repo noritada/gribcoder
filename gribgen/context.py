@@ -11,6 +11,7 @@ class Grib2MessageWriter:
     f: BinaryIO
     ind: Indicator
     ident: Identification
+    _size: int = dataclasses.field(default=0, init=False)
     _last_sect_no: int = dataclasses.field(default=0, init=False)
     _start_pos: int = dataclasses.field(init=False)
 
@@ -25,7 +26,7 @@ class Grib2MessageWriter:
 
     def close(self):
         self._write_sect8()
-        self._update_size()
+        self._finalize_size()
 
     def _check_file(self):
         if not self.f.writable():
@@ -36,11 +37,11 @@ class Grib2MessageWriter:
 
     def _write_sect0(self):
         with self._section_context(0):
-            self.ind.write(self.f)
+            self._size += self.ind.write(self.f)
 
     def _write_sect1(self):
         with self._section_context(1):
-            self.ident.write(self.f)
+            self._size += self.ident.write(self.f)
 
     def _write_sect2(self):
         with self._section_context(2, lambda x: x == 7):
@@ -56,23 +57,24 @@ class Grib2MessageWriter:
 
     def _write_sect5(self, encoder: BaseEncoder):
         with self._section_context(5):
-            encoder.write_sect5(self.f)
+            self._size += encoder.write_sect5(self.f)
 
     def _write_sect6(self, encoder: BaseEncoder):
         with self._section_context(6):
-            encoder.write_sect6(self.f)
+            self._size += encoder.write_sect6(self.f)
 
     def _write_sect7(self, encoder: BaseEncoder):
         with self._section_context(7):
-            encoder.write_sect7(self.f)
+            self._size += encoder.write_sect7(self.f)
 
     def _write_sect8(self):
         with self._section_context(8):
-            self.f.write(b"\x37\x37\x37\x37")
+            self._size += self.f.write(b"\x37\x37\x37\x37")
 
-    def _update_size(self):
+    def _finalize_size(self):
+        self.ind.total_length = self._size
         self.f.seek(self._start_pos)
-        # actual update is not implemented
+        self.ind.write(self.f)
 
     @contextlib.contextmanager
     def _section_context(self, sect_no: int, cond: Callable[[int], bool] | None = None):
