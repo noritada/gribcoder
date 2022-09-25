@@ -1,9 +1,17 @@
 import dataclasses
+from abc import ABC, abstractmethod
 from typing import BinaryIO
 
 import numpy as np
 
 from gribgen.utils import SECT_HEADER_DTYPE, create_sect_header, grib_signed
+
+
+class BaseGrid(ABC):
+    @abstractmethod
+    def write(self, f: BinaryIO) -> int:
+        return 0
+
 
 DTYPE_SHAPE_OF_THE_EARTH = np.dtype(
     [
@@ -48,7 +56,7 @@ _UNIT_DEG = 1_000_000
 
 
 @dataclasses.dataclass
-class LatitudeLongitudeGrid:
+class LatitudeLongitudeGrid(BaseGrid):
     first_lat: int
     first_lon: int
     last_lat: int
