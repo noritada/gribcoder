@@ -5,7 +5,7 @@ from typing import BinaryIO
 import numpy as np
 from nptyping import Bool, NDArray, Shape, UInt8
 
-from gribgen.utils import SECT_HEADER_DTYPE, create_sect_header, grib_signed
+from .utils import SECT_HEADER_DTYPE, create_sect_header, grib_signed
 
 
 class BaseEncoder(ABC):

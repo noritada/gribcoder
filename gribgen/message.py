@@ -4,7 +4,7 @@ from typing import BinaryIO
 
 import numpy as np
 
-from gribgen.utils import SECT_HEADER_DTYPE, create_sect_header
+from .utils import SECT_HEADER_DTYPE, create_sect_header
 
 DTYPE_SECTION_0 = np.dtype(
     [
