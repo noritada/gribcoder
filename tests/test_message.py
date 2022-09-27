@@ -1,7 +1,7 @@
 from datetime import datetime
 from io import BytesIO
 
-from gribgen.message import Identification, Indicator
+from gribgen import Identification, Indicator
 
 
 def test_indicator():
