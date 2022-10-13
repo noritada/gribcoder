@@ -6,11 +6,18 @@ import helpers
 import numpy as np
 import pytest
 
-from gribgen import BaseEncoder, BaseGrid, Grib2MessageWriter, Identification, Indicator
+from gribgen import (
+    BaseEncoder,
+    BaseGrid,
+    BaseProductDefinition,
+    Grib2MessageWriter,
+    Identification,
+    Indicator,
+)
 from gribgen.message import DTYPE_SECTION_0
 
 
-def fake_write_sect(grib2, sect_num, ind, ident, grid, encoder):
+def fake_write_sect(grib2, sect_num, ind, ident, grid, product, encoder):
     if sect_num == 0:
         grib2._write_sect1(ind)
     elif sect_num == 1:
@@ -20,7 +27,7 @@ def fake_write_sect(grib2, sect_num, ind, ident, grid, encoder):
     elif sect_num == 3:
         grib2._write_sect3(grid)
     elif sect_num == 4:
-        grib2._write_sect4()
+        grib2._write_sect4(product)
     elif sect_num == 5:
         grib2._write_sect5(encoder)
     elif sect_num == 6:
@@ -32,6 +39,11 @@ def fake_write_sect(grib2, sect_num, ind, ident, grid, encoder):
 
 
 class EmptyGrid(BaseGrid):
+    def write(self, f: BinaryIO) -> int:
+        return 0
+
+
+class EmptyProductDefinition(BaseProductDefinition):
     def write(self, f: BinaryIO) -> int:
         return 0
 
@@ -80,9 +92,10 @@ def test_section_order(order, expectation):
             ident = Identification(0, 0, 0, 0, 0, datetime.now(), 0, 0)
             with Grib2MessageWriter(fw, ind, ident) as grib2:
                 grid = EmptyGrid()
+                product = EmptyProductDefinition()
                 encoder = EmptyEncoder()
                 for num in order:
-                    fake_write_sect(grib2, num, ind, ident, grid, encoder)
+                    fake_write_sect(grib2, num, ind, ident, grid, product, encoder)
 
         if e is not None:
             assert str(e.value) == "wrong section order"
@@ -91,6 +104,11 @@ def test_section_order(order, expectation):
 class ParityBitSizedGrid(BaseGrid):
     def write(self, f: BinaryIO) -> int:
         return _write_length(f, 0b00000010)
+
+
+class ParityBitSizedProductDefinition(BaseProductDefinition):
+    def write(self, f: BinaryIO) -> int:
+        return _write_length(f, 0b00000100)
 
 
 class ParityBitSizedEncoder(BaseEncoder):
@@ -111,14 +129,14 @@ def _write_length(f: BinaryIO, len: int) -> int:
 @pytest.mark.parametrize(
     "order,expected",
     [
-        ([2, 3, 4, 5, 6, 7], 16 + 21 + 0 + 0 + 0 + 0b00111010 + 4),
-        ([3, 4, 5, 6, 7], 16 + 21 + 0 + 0 + 0b00111010 + 4),
+        ([2, 3, 4, 5, 6, 7], 16 + 21 + 0 + 0 + 0 + 0b00111110 + 4),
+        ([3, 4, 5, 6, 7], 16 + 21 + 0 + 0 + 0b00111110 + 4),
         (
             [2, 3, 4, 5, 6, 7, 2, 3, 4, 5, 6, 7],
-            16 + 21 + (0 + 0 + 0 + 0b00111010) * 2 + 4,
+            16 + 21 + (0 + 0b00111110) * 2 + 4,
         ),
-        ([3, 4, 5, 6, 7, 3, 4, 5, 6, 7], 16 + 21 + (0 + 0 + 0b00111010) * 2 + 4),
-        ([3, 4, 5, 6, 7, 4, 5, 6, 7], 16 + 21 + 0b00000010 + (0 + 0b00111000) * 2 + 4),
+        ([3, 4, 5, 6, 7, 3, 4, 5, 6, 7], 16 + 21 + 0b00111110 * 2 + 4),
+        ([3, 4, 5, 6, 7, 4, 5, 6, 7], 16 + 21 + 0b00000010 + (0b00111100) * 2 + 4),
     ],
 )
 def test_output_message_length(order, expected):
@@ -127,9 +145,10 @@ def test_output_message_length(order, expected):
         ident = Identification(0, 0, 0, 0, 0, datetime.now(), 0, 0)
         with Grib2MessageWriter(fw, ind, ident) as grib2:
             grid = ParityBitSizedGrid()
+            product = ParityBitSizedProductDefinition()
             encoder = ParityBitSizedEncoder()
             for num in order:
-                fake_write_sect(grib2, num, ind, ident, grid, encoder)
+                fake_write_sect(grib2, num, ind, ident, grid, product, encoder)
 
         output = fw.getvalue()
 

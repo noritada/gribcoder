@@ -5,6 +5,7 @@ from typing import BinaryIO, Callable
 from .encoders import BaseEncoder
 from .grid import BaseGrid
 from .message import Identification, Indicator
+from .product import BaseProductDefinition
 
 
 @dataclasses.dataclass
@@ -52,9 +53,9 @@ class Grib2MessageWriter:
         with self._section_context(3, lambda x: x == 1 or x == 7):
             self._size += grid.write(self.f)
 
-    def _write_sect4(self):
+    def _write_sect4(self, product: BaseProductDefinition):
         with self._section_context(4, lambda x: x == 7):
-            pass  # not implemented
+            self._size += product.write(self.f)
 
     def _write_sect5(self, encoder: BaseEncoder):
         with self._section_context(5):
