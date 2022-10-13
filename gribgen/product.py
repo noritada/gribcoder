@@ -58,7 +58,6 @@ class BaseProductDefinition(ABC):
 @dataclasses.dataclass
 class ProductDefinitionWithTemplate4_0:
     nv: int
-    product_definition_template_number: int
 
     def parameter(self, values: np.ndarray):  # `-> Self` for Python >=3.11 (PEP 673)
         if values.dtype != DTYPE_SECTION_4_PARAMETER:
@@ -98,7 +97,7 @@ class ProductDefinitionWithTemplate4_0:
 
     def write(self, f: BinaryIO) -> int:
         section_main_buf = np.array(
-            [(self.nv, self.product_definition_template_number)],
+            [(self.nv, 0)],
             dtype=DTYPE_SECTION_4,
         )
 
