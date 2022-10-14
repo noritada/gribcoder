@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import dataclasses
 from abc import ABC, abstractmethod
 from typing import BinaryIO
