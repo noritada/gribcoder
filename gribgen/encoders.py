@@ -52,9 +52,9 @@ class SimplePackingEncoder(BaseEncoder):
             raise RuntimeError("data is not specified")
         if isinstance(self._input, np.ma.MaskedArray):
             input_ = self._input[~self._input.mask]
-            bitmap = create_bitmap(self._input.mask)
+            bitmap = create_bitmap(self._input.mask.ravel())
         else:
-            input_ = self._input
+            input_ = self._input.ravel()
             bitmap = None
         if np.isnan(input_).any():
             # if the data contains NaN, encoding itself succeeds, but proper values
