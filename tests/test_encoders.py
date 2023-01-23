@@ -4,8 +4,8 @@ import helpers
 import numpy as np
 import pytest
 
-from gribgen import SimplePackingEncoder
-from gribgen.encoders import create_bitmap
+from gribcoder import SimplePackingEncoder
+from gribcoder.encoders import create_bitmap
 
 
 @pytest.mark.parametrize(

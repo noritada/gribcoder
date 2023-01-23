@@ -6,7 +6,7 @@ build-backend = "poetry.core.masonry.api"
 profile = "black"
 
 [tool.poetry]
-name = "gribgen"
+name = "gribcoder"
 version = "0.1.0"
 description = ""
 authors = ["Noritada Kobayashi <noritada.kobayashi@gmail.com>"]

@@ -6,7 +6,7 @@ import helpers
 import numpy as np
 import pytest
 
-from gribgen import (
+from gribcoder import (
     BaseEncoder,
     BaseGrid,
     BaseProductDefinition,
@@ -14,7 +14,7 @@ from gribgen import (
     Identification,
     Indicator,
 )
-from gribgen.message import DTYPE_SECTION_0
+from gribcoder.message import DTYPE_SECTION_0
 
 
 def fake_write_sect(grib2, sect_num, ind, ident, grid, product, encoder):

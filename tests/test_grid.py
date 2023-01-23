@@ -4,8 +4,8 @@ import helpers
 import numpy as np
 import pytest
 
-from gribgen import LatitudeLongitudeGrid
-from gribgen.grid import DTYPE_SHAPE_OF_THE_EARTH
+from gribcoder import LatitudeLongitudeGrid
+from gribcoder.grid import DTYPE_SHAPE_OF_THE_EARTH
 
 
 @pytest.mark.parametrize(

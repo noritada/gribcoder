@@ -4,7 +4,7 @@ from io import BytesIO
 
 import numpy as np
 
-import gribgen as gribcoder
+import gribcoder
 
 
 @dataclasses.dataclass

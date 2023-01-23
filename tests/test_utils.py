@@ -1,6 +1,6 @@
 import pytest
 
-from gribgen.utils import create_sect_header, grib_signed
+from gribcoder.utils import create_sect_header, grib_signed
 
 
 def test_sect_header_creation():
