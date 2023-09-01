@@ -23,6 +23,7 @@ dev-dependencies = [
     "flake8>=5",
     "isort>=5",
     "pytest>=7.1.3",
+    "mypy>=1.4.1",
 ]
 
 [tool.hatch.metadata]
