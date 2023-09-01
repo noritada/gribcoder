@@ -31,6 +31,18 @@ class SimplePackingEncoder(BaseEncoder):
     d: int
     n: int
 
+    @classmethod
+    def auto_parametrized_from(cls, n: int, data: np.ndarray, scaling="linear"):
+        """Constructs an encoder with parameter sets.
+        Currently, only parameter sets for linear scaling are supported.
+        """
+        if scaling == "linear":
+            r, d = _get_parameters_linear(n, data)
+        else:
+            raise RuntimeError("unsupported scaling type")
+
+        return cls(r, 0, d, n).input(data)
+
     def input(self, data: np.ndarray):  # `-> Self` for Python >=3.11 (PEP 673)
         """Sets input data to be encoded.
 
@@ -160,6 +172,13 @@ class SimplePackingEncoder(BaseEncoder):
         write(f, header)
         write(f, encoded)
         return sect_len
+
+
+def _get_parameters_linear(n: int, data: np.ndarray):
+    min = data.min()
+    d = -round(np.log10((data.max() - min) / (2**n - 1)))
+    r = min * 10**d
+    return (r, d)
 
 
 def create_bitmap(mask: NDArray[Shape["*"], Bool]) -> NDArray[Shape["*"], UInt8]:

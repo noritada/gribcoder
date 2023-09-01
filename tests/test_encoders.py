@@ -9,6 +9,64 @@ from gribcoder.encoders import create_bitmap
 
 
 @pytest.mark.parametrize(
+    "input,expected_r,expected_e,expected_d,expected_encoded",
+    [
+        (
+            np.arange(256),
+            0.0,
+            0,
+            0,
+            np.arange(256),
+        ),
+        (
+            np.arange(256) + 100,
+            100.0,
+            0,
+            0,
+            np.arange(256),
+        ),
+        (
+            np.arange(256) * -1,
+            -255.0,
+            0,
+            0,
+            np.arange(256)[::-1],
+        ),
+        (
+            np.arange(256) * 100,
+            0.0,
+            0,
+            -2,
+            np.arange(256),
+        ),
+        (
+            (np.arange(256) + 100) / 100,
+            100.0,
+            0,
+            2,
+            np.arange(256),
+        ),
+        (
+            (np.arange(256) - 100) / 100,
+            -100.0,
+            0,
+            2,
+            np.arange(256),
+        ),
+    ],
+)
+def test_auto_parametrization(
+    input, expected_r, expected_e, expected_d, expected_encoded
+):
+    encoder = SimplePackingEncoder.auto_parametrized_from(8, input, scaling="linear")
+    actual_encoded, _actual_bitmap = encoder.encode()
+    assert encoder.r == expected_r
+    assert encoder.e == expected_e
+    assert encoder.d == expected_d
+    np.testing.assert_array_equal(actual_encoded, expected_encoded)
+
+
+@pytest.mark.parametrize(
     "input,r,e,d,expected_encoded,expected_bitmap",
     [
         (
