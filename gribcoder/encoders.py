@@ -155,8 +155,7 @@ class SimplePackingEncoder(BaseEncoder):
     def write_sect7(self, f: BinaryIO) -> int:
         """Writes encoded data to the stream as Section 7 octet sequence."""
         encoded, _ = self.encode()
-        encoded = encoded.tobytes()
-        sect_len = SECT_HEADER_DTYPE.itemsize + len(encoded)
+        sect_len = SECT_HEADER_DTYPE.itemsize + encoded.nbytes
         header = create_sect_header(7, sect_len)
         f.write(header)
         f.write(encoded)
