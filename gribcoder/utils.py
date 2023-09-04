@@ -1,3 +1,5 @@
+from typing import BinaryIO
+
 import numpy as np
 
 SECT_HEADER_DTYPE = np.dtype(
@@ -21,3 +23,8 @@ def grib_signed(num: int, byte_length: int) -> int:
 def set_bit_one(value: int, n: int) -> int:
     """Sets `n`th bit of `value` to 1."""
     return value | (1 << n)
+
+
+def write(f: BinaryIO, array: np.ndarray) -> int:
+    f.write(array)
+    return array.nbytes

@@ -6,7 +6,7 @@ from typing import BinaryIO
 
 import numpy as np
 
-from .utils import SECT_HEADER_DTYPE, create_sect_header, grib_signed
+from .utils import SECT_HEADER_DTYPE, create_sect_header, grib_signed, write
 
 
 class BaseGrid(ABC):
@@ -186,10 +186,10 @@ class LatitudeLongitudeGrid(BaseGrid):
         )
 
         header = create_sect_header(3, sect_len)
-        f.write(header)
-        f.write(section_main_buf)
-        f.write(self._shape_of_the_earth)
-        f.write(template_main_buf)
+        write(f, header)
+        write(f, section_main_buf)
+        write(f, self._shape_of_the_earth)
+        write(f, template_main_buf)
         return sect_len
 
     def _get_resolution_and_component_flag(self) -> int:

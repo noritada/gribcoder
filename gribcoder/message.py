@@ -4,7 +4,7 @@ from typing import BinaryIO
 
 import numpy as np
 
-from .utils import SECT_HEADER_DTYPE, create_sect_header
+from .utils import SECT_HEADER_DTYPE, create_sect_header, write
 
 DTYPE_SECTION_0 = np.dtype(
     [
@@ -46,7 +46,7 @@ class Indicator:
             dtype=DTYPE_SECTION_0,
         )
 
-        f.write(section_buf)
+        write(f, section_buf)
         return DTYPE_SECTION_0.itemsize
 
 
@@ -86,6 +86,6 @@ class Identification:
         sect_len = SECT_HEADER_DTYPE.itemsize + DTYPE_SECTION_1.itemsize
 
         header = create_sect_header(1, sect_len)
-        f.write(header)
-        f.write(section_buf)
+        write(f, header)
+        write(f, section_buf)
         return sect_len

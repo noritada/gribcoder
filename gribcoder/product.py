@@ -4,7 +4,7 @@ from typing import BinaryIO
 
 import numpy as np
 
-from .utils import SECT_HEADER_DTYPE, create_sect_header
+from .utils import SECT_HEADER_DTYPE, create_sect_header, write
 
 DTYPE_SECTION_4 = np.dtype(
     [
@@ -111,10 +111,10 @@ class ProductDefinitionWithTemplate4_0:
         )
 
         header = create_sect_header(4, sect_len)
-        f.write(header)
-        f.write(section_main_buf)
-        f.write(self._parameter)
-        f.write(self._generating_process)
-        f.write(self._forecast_time)
-        f.write(self._horizontal)
+        write(f, header)
+        write(f, section_main_buf)
+        write(f, self._parameter)
+        write(f, self._generating_process)
+        write(f, self._forecast_time)
+        write(f, self._horizontal)
         return sect_len

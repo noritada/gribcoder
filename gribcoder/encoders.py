@@ -7,7 +7,7 @@ from typing import BinaryIO
 import numpy as np
 from nptyping import Bool, NDArray, Shape, UInt8
 
-from .utils import SECT_HEADER_DTYPE, create_sect_header, grib_signed
+from .utils import SECT_HEADER_DTYPE, create_sect_header, grib_signed, write
 
 
 class BaseEncoder(ABC):
@@ -125,9 +125,9 @@ class SimplePackingEncoder(BaseEncoder):
         )
 
         header = create_sect_header(5, sect_len)
-        f.write(header)
-        f.write(main_buf)
-        f.write(template_buf)
+        write(f, header)
+        write(f, main_buf)
+        write(f, template_buf)
         return sect_len
 
     def write_sect6(self, f: BinaryIO) -> int:
@@ -147,9 +147,9 @@ class SimplePackingEncoder(BaseEncoder):
 
         sect_len = SECT_HEADER_DTYPE.itemsize + main_dtype.itemsize + len(bitmap)
         header = create_sect_header(6, sect_len)
-        f.write(header)
-        f.write(main_buf)
-        f.write(bitmap)
+        write(f, header)
+        write(f, main_buf)
+        write(f, bitmap)
         return sect_len
 
     def write_sect7(self, f: BinaryIO) -> int:
@@ -157,8 +157,8 @@ class SimplePackingEncoder(BaseEncoder):
         encoded, _ = self.encode()
         sect_len = SECT_HEADER_DTYPE.itemsize + encoded.nbytes
         header = create_sect_header(7, sect_len)
-        f.write(header)
-        f.write(encoded)
+        write(f, header)
+        write(f, encoded)
         return sect_len
 
 
