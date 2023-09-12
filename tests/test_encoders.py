@@ -9,6 +9,186 @@ from gribcoder.encoders import create_bitmap
 
 
 @pytest.mark.parametrize(
+    "input,expected_r,expected_e,expected_d,expected_encoded,expected_restored",
+    [
+        (
+            np.arange(256),
+            0.0,
+            0,
+            0,
+            np.arange(256),
+            np.arange(256),
+        ),
+        (
+            np.arange(256) + 100,
+            100.0,
+            0,
+            0,
+            np.arange(256),
+            np.arange(256) + 100,
+        ),
+        (
+            np.arange(256) * -1,
+            -255.0,
+            0,
+            0,
+            np.arange(256)[::-1],
+            np.arange(256) * -1,
+        ),
+        (
+            np.arange(256) * 100,
+            0.0,
+            0,
+            -2,
+            np.arange(256),
+            np.arange(256) * 100,
+        ),
+        (
+            (np.arange(256) + 100) / 100,
+            100.0,
+            0,
+            2,
+            np.arange(256),
+            (np.arange(256) + 100) / 100,
+        ),
+        (
+            (np.arange(256) - 100) / 100,
+            -100.0,
+            0,
+            2,
+            np.arange(256),
+            (np.arange(256) - 100) / 100,
+        ),
+        (
+            np.array([0, 1, 382, 383]),
+            0.0,
+            0,
+            -1,
+            np.array([0, 0, 38, 38]),
+            np.array([0, 0, 380, 380]),
+        ),
+        (
+            np.ma.MaskedArray(np.arange(256), mask=[0] + [1] * 254 + [0]),
+            0.0,
+            0,
+            0,
+            np.array([0, 255]),
+            np.array([0, 255]),
+        ),
+    ],
+)
+def test_auto_parametrization_simple_linear(
+    input, expected_r, expected_e, expected_d, expected_encoded, expected_restored
+):
+    encoder = SimplePackingEncoder.auto_parametrized_from(
+        input, scaling="simple-linear", nbit=8
+    )
+    actual_encoded, _actual_bitmap = encoder.encode()
+    assert encoder.r == expected_r
+    assert encoder.e == expected_e
+    assert encoder.d == expected_d
+    np.testing.assert_array_equal(actual_encoded, expected_encoded)
+
+    actual_restored = (
+        encoder.r + actual_encoded.astype(float) * 2**encoder.e
+    ) * 10 ** (-encoder.d)
+    np.testing.assert_array_almost_equal(actual_restored, expected_restored, decimal=15)
+
+
+@pytest.mark.parametrize(
+    "input,decimals,expected_r,expected_e,expected_d,expected_n,expected_encoded,"
+    "expected_restored",
+    [
+        (
+            np.arange(256),
+            0,
+            0.0,
+            0,
+            0,
+            8,
+            np.arange(256),
+            np.arange(256),
+        ),
+        (
+            np.arange(256),
+            1,
+            0.0,
+            0,
+            1,
+            16,
+            np.arange(256) * 10,
+            np.arange(256),
+        ),
+        (
+            np.arange(256),
+            3,
+            0.0,
+            0,
+            3,
+            32,
+            np.arange(256) * 1000,
+            np.arange(256),
+        ),
+        (
+            np.arange(256),
+            8,
+            0.0,
+            0,
+            8,
+            64,
+            np.arange(256) * 100_000_000,
+            np.arange(256),
+        ),
+        (
+            np.arange(256),
+            -1,
+            0.0,
+            0,
+            -1,
+            8,
+            np.round(np.arange(256) * 0.1),
+            np.round(np.arange(256), decimals=-1),
+            # np.arange(256),
+        ),
+        (
+            np.ma.MaskedArray(np.arange(256), mask=[0] + [1] * 254 + [0]),
+            0,
+            0.0,
+            0,
+            0,
+            8,
+            np.array([0, 255]),
+            np.array([0, 255]),
+        ),
+    ],
+)
+def test_auto_parametrization_fixed_digit_linear(
+    input,
+    decimals,
+    expected_r,
+    expected_e,
+    expected_d,
+    expected_n,
+    expected_encoded,
+    expected_restored,
+):
+    encoder = SimplePackingEncoder.auto_parametrized_from(
+        input, scaling="fixed-digit-linear", decimals=decimals
+    )
+    actual_encoded, _actual_bitmap = encoder.encode()
+    assert encoder.r == expected_r
+    assert encoder.e == expected_e
+    assert encoder.d == expected_d
+    assert encoder.n == expected_n
+    np.testing.assert_array_equal(actual_encoded, expected_encoded)
+
+    actual_restored = (
+        encoder.r + actual_encoded.astype(float) * 2**encoder.e
+    ) * 10 ** (-encoder.d)
+    np.testing.assert_array_almost_equal(actual_restored, expected_restored, decimal=15)
+
+
+@pytest.mark.parametrize(
     "input,r,e,d,expected_encoded,expected_bitmap",
     [
         (
