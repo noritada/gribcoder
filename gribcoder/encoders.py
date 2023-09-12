@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from abc import ABC, abstractmethod
+from math import ceil
 from typing import BinaryIO
 
 import numpy as np
@@ -176,7 +177,7 @@ class SimplePackingEncoder(BaseEncoder):
 
 def _get_parameters_linear(n: int, data: np.ndarray):
     min = data.min()
-    d = -round(np.log10((data.max() - min) / (2**n - 1)))
+    d = -ceil(np.log10((data.max() - min) / (2**n - 1)))
     r = min * 10**d
     return (r, d)
 
