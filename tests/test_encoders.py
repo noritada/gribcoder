@@ -67,6 +67,14 @@ from gribcoder.encoders import create_bitmap
             np.array([0, 0, 38, 38]),
             np.array([0, 0, 380, 380]),
         ),
+        (
+            np.ma.MaskedArray(np.arange(256), mask=[0] + [1] * 254 + [0]),
+            0.0,
+            0,
+            0,
+            np.array([0, 255]),
+            np.array([0, 255]),
+        ),
     ],
 )
 def test_auto_parametrization(
