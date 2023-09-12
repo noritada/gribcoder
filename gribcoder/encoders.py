@@ -33,12 +33,15 @@ class SimplePackingEncoder(BaseEncoder):
     n: int
 
     @classmethod
-    def auto_parametrized_from(cls, n: int, data: np.ndarray, scaling="linear"):
+    def auto_parametrized_from(
+        cls, data: np.ndarray, scaling: str = "simple-linear", **kwargs
+    ):
         """Constructs an encoder with parameter sets.
         Currently, only parameter sets for linear scaling are supported.
         """
-        if scaling == "linear":
-            r, d = _get_parameters_linear(n, data)
+        if scaling == "simple-linear":
+            n = kwargs["nbit"]
+            r, d = _get_parameters_simple_linear(data, n)
         else:
             raise RuntimeError("unsupported scaling type")
 
@@ -175,9 +178,9 @@ class SimplePackingEncoder(BaseEncoder):
         return sect_len
 
 
-def _get_parameters_linear(n: int, data: np.ndarray):
+def _get_parameters_simple_linear(data: np.ndarray, nbit: int):
     min = data.min()
-    d = -ceil(np.log10((data.max() - min) / (2**n - 1)))
+    d = -ceil(np.log10((data.max() - min) / (2**nbit - 1)))
     r = min * 10**d
     return (r, d)
 

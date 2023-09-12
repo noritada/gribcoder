@@ -77,10 +77,12 @@ from gribcoder.encoders import create_bitmap
         ),
     ],
 )
-def test_auto_parametrization(
+def test_auto_parametrization_simple_linear(
     input, expected_r, expected_e, expected_d, expected_encoded, expected_restored
 ):
-    encoder = SimplePackingEncoder.auto_parametrized_from(8, input, scaling="linear")
+    encoder = SimplePackingEncoder.auto_parametrized_from(
+        input, scaling="simple-linear", nbit=8
+    )
     actual_encoded, _actual_bitmap = encoder.encode()
     assert encoder.r == expected_r
     assert encoder.e == expected_e
