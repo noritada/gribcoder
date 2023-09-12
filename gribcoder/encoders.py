@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from abc import ABC, abstractmethod
-from math import ceil
+from math import ceil, log2
 from typing import BinaryIO
 
 import numpy as np
@@ -37,11 +37,18 @@ class SimplePackingEncoder(BaseEncoder):
         cls, data: np.ndarray, scaling: str = "simple-linear", **kwargs
     ):
         """Constructs an encoder with parameter sets.
-        Currently, only parameter sets for linear scaling are supported.
+
+        - "simple-linear" prepares an encoder with parameter sets for linear scaling for
+          given "nbit"
+        - "fixed-digit-linear" prepares an encoder with parameter sets for linear
+          scaling for given "decimals" (number of decimal places; precision)
         """
         if scaling == "simple-linear":
             n = kwargs["nbit"]
             r, d = _get_parameters_simple_linear(data, n)
+        elif scaling == "fixed-digit-linear":
+            d = kwargs["decimals"]
+            r, n = _get_parameters_fixed_digit_linear(data, d)
         else:
             raise RuntimeError("unsupported scaling type")
 
@@ -183,6 +190,26 @@ def _get_parameters_simple_linear(data: np.ndarray, nbit: int):
     d = -ceil(np.log10((data.max() - min) / (2**nbit - 1)))
     r = min * 10**d
     return (r, d)
+
+
+def _get_parameters_fixed_digit_linear(data: np.ndarray, decimals: int):
+    inverse_precision = 10**decimals
+    min = round(data.min() * inverse_precision)
+    max = round(data.max() * inverse_precision)
+    n_required = ceil(log2(max - min))
+    n = _get_supported_nbit(n_required)
+    return (min, n)
+
+
+def _get_supported_nbit(n: int):
+    if n > 32:
+        return 64
+    elif n > 16:
+        return 32
+    elif n > 8:
+        return 16
+    else:
+        return 8
 
 
 def create_bitmap(mask: NDArray[Shape["*"], Bool]) -> NDArray[Shape["*"], UInt8]:
