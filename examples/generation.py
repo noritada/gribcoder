@@ -70,9 +70,10 @@ def generate_grib2(grid_lats, grid_lons, grid_alts, regridded, time):
                     grib2._write_sect4(product)
 
                     print(regridded.shape)
-                    encoder = gribcoder.SimplePackingEncoder(0, 0, 0, 16).input(
-                        regridded[:, :, i, elem_index]
-                    )
+                    data = regridded[:, :, i, elem_index]
+                    encoder = gribcoder.SimplePackingEncoder.auto_parametrized_from(
+                        data, "fixed-digit-linear", decimals=0
+                    ).input(data)
                     grib2._write_sect5(encoder)
                     grib2._write_sect6(encoder)
                     grib2._write_sect7(encoder)
