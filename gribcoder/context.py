@@ -25,8 +25,9 @@ class Grib2MessageWriter:
         self._write_sect1()
         return self
 
-    def __exit__(self, _exc_type, _exc_val, _exc_tb):
-        self.close()
+    def __exit__(self, exc_type, _exc_val, _exc_tb):
+        if exc_type is None:
+            self.close()
 
     def close(self):
         self._write_sect8()
@@ -92,7 +93,5 @@ class Grib2MessageWriter:
             raise RuntimeError(
                 f"wrong section order: {self._last_sect_no} -> {sect_no}"
             )
-        try:
-            yield
-        finally:
-            self._last_sect_no = sect_no
+        yield
+        self._last_sect_no = sect_no

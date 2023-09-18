@@ -13,6 +13,7 @@ from gribcoder import (
     Grib2MessageWriter,
     Identification,
     Indicator,
+    SimplePackingEncoder,
 )
 from gribcoder.message import DTYPE_SECTION_0
 
@@ -158,3 +159,33 @@ def test_output_message_length(order, expected):
     output_sect0 = np.frombuffer(output, dtype=DTYPE_SECTION_0, count=1)
     actual_length_recorded_in_sect0 = output_sect0[0]["total_length"]
     assert actual_length_recorded_in_sect0 == expected
+
+
+@pytest.mark.parametrize(
+    "encoder_func,expectation",
+    [
+        (lambda: ParityBitSizedEncoder(), helpers.does_not_raise()),
+        (lambda: "some string", pytest.raises(AttributeError)),
+        (
+            lambda: SimplePackingEncoder.auto_parametrized_from(
+                np.arange(16),
+                "simple-linear",
+            ).input(np.arange(16)),
+            pytest.raises(KeyError),
+        ),
+    ],
+)
+def test_error_handling_in_writer_context(encoder_func, expectation):
+    with expectation as _:
+        with io.BytesIO() as fw:
+            ind = Indicator(0)
+            ident = Identification(0, 0, 0, 0, 0, datetime.now(), 0, 0)
+            with Grib2MessageWriter(fw, ind, ident) as grib2:
+                grid = ParityBitSizedGrid()
+                product = ParityBitSizedProductDefinition()
+                encoder = encoder_func()
+                grib2._write_sect3(grid)
+                grib2._write_sect4(product)
+                grib2._write_sect5(encoder)
+                grib2._write_sect6(encoder)
+                grib2._write_sect7(encoder)
