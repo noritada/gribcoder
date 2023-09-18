@@ -13,15 +13,16 @@ from gribcoder import (
     Grib2MessageWriter,
     Identification,
     Indicator,
+    SimplePackingEncoder,
 )
 from gribcoder.message import DTYPE_SECTION_0
 
 
-def fake_write_sect(grib2, sect_num, ind, ident, grid, product, encoder):
+def fake_write_sect(grib2, sect_num, grid, product, encoder):
     if sect_num == 0:
-        grib2._write_sect1(ind)
+        grib2._write_sect0()
     elif sect_num == 1:
-        grib2._write_sect1(ident)
+        grib2._write_sect1()
     elif sect_num == 2:
         grib2._write_sect2()
     elif sect_num == 3:
@@ -95,10 +96,10 @@ def test_section_order(order, expectation):
                 product = EmptyProductDefinition()
                 encoder = EmptyEncoder()
                 for num in order:
-                    fake_write_sect(grib2, num, ind, ident, grid, product, encoder)
+                    fake_write_sect(grib2, num, grid, product, encoder)
 
         if e is not None:
-            assert str(e.value) == "wrong section order"
+            assert str(e.value).startswith("wrong section order")
 
 
 class ParityBitSizedGrid(BaseGrid):
@@ -148,7 +149,7 @@ def test_output_message_length(order, expected):
             product = ParityBitSizedProductDefinition()
             encoder = ParityBitSizedEncoder()
             for num in order:
-                fake_write_sect(grib2, num, ind, ident, grid, product, encoder)
+                fake_write_sect(grib2, num, grid, product, encoder)
 
         output = fw.getvalue()
 
@@ -158,3 +159,33 @@ def test_output_message_length(order, expected):
     output_sect0 = np.frombuffer(output, dtype=DTYPE_SECTION_0, count=1)
     actual_length_recorded_in_sect0 = output_sect0[0]["total_length"]
     assert actual_length_recorded_in_sect0 == expected
+
+
+@pytest.mark.parametrize(
+    "encoder_func,expectation",
+    [
+        (lambda: ParityBitSizedEncoder(), helpers.does_not_raise()),
+        (lambda: "some string", pytest.raises(AttributeError)),
+        (
+            lambda: SimplePackingEncoder.auto_parametrized_from(
+                np.arange(16),
+                "simple-linear",
+            ).input(np.arange(16)),
+            pytest.raises(KeyError),
+        ),
+    ],
+)
+def test_error_handling_in_writer_context(encoder_func, expectation):
+    with expectation as _:
+        with io.BytesIO() as fw:
+            ind = Indicator(0)
+            ident = Identification(0, 0, 0, 0, 0, datetime.now(), 0, 0)
+            with Grib2MessageWriter(fw, ind, ident) as grib2:
+                grid = ParityBitSizedGrid()
+                product = ParityBitSizedProductDefinition()
+                encoder = encoder_func()
+                grib2._write_sect3(grid)
+                grib2._write_sect4(product)
+                grib2._write_sect5(encoder)
+                grib2._write_sect6(encoder)
+                grib2._write_sect7(encoder)
