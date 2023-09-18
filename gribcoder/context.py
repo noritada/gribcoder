@@ -8,7 +8,6 @@ from .encoders import BaseEncoder
 from .grid import BaseGrid
 from .message import Identification, Indicator
 from .product import BaseProductDefinition
-from .utils import write
 
 
 @dataclasses.dataclass
