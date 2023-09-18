@@ -89,7 +89,9 @@ class Grib2MessageWriter:
         ):
             pass
         else:
-            raise RuntimeError("wrong section order")
+            raise RuntimeError(
+                f"wrong section order: {self._last_sect_no} -> {sect_no}"
+            )
         try:
             yield
         finally:

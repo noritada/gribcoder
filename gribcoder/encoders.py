@@ -50,7 +50,7 @@ class SimplePackingEncoder(BaseEncoder):
             d = kwargs["decimals"]
             r, n = _get_parameters_fixed_digit_linear(data, d)
         else:
-            raise RuntimeError("unsupported scaling type")
+            raise RuntimeError(f"unsupported scaling type: {scaling}")
 
         return cls(r, 0, d, n).input(data)
 

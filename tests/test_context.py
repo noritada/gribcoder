@@ -98,7 +98,7 @@ def test_section_order(order, expectation):
                     fake_write_sect(grib2, num, ind, ident, grid, product, encoder)
 
         if e is not None:
-            assert str(e.value) == "wrong section order"
+            assert str(e.value).startswith("wrong section order")
 
 
 class ParityBitSizedGrid(BaseGrid):
