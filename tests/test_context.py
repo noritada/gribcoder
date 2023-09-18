@@ -18,11 +18,11 @@ from gribcoder import (
 from gribcoder.message import DTYPE_SECTION_0
 
 
-def fake_write_sect(grib2, sect_num, ind, ident, grid, product, encoder):
+def fake_write_sect(grib2, sect_num, grid, product, encoder):
     if sect_num == 0:
-        grib2._write_sect1(ind)
+        grib2._write_sect0()
     elif sect_num == 1:
-        grib2._write_sect1(ident)
+        grib2._write_sect1()
     elif sect_num == 2:
         grib2._write_sect2()
     elif sect_num == 3:
@@ -96,7 +96,7 @@ def test_section_order(order, expectation):
                 product = EmptyProductDefinition()
                 encoder = EmptyEncoder()
                 for num in order:
-                    fake_write_sect(grib2, num, ind, ident, grid, product, encoder)
+                    fake_write_sect(grib2, num, grid, product, encoder)
 
         if e is not None:
             assert str(e.value).startswith("wrong section order")
@@ -149,7 +149,7 @@ def test_output_message_length(order, expected):
             product = ParityBitSizedProductDefinition()
             encoder = ParityBitSizedEncoder()
             for num in order:
-                fake_write_sect(grib2, num, ind, ident, grid, product, encoder)
+                fake_write_sect(grib2, num, grid, product, encoder)
 
         output = fw.getvalue()
 
