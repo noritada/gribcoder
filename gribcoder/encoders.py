@@ -43,7 +43,9 @@ class SimplePackingEncoder(BaseEncoder):
         - "fixed-digit-linear" prepares an encoder with parameter sets for linear
           scaling for given "decimals" (number of decimal places; precision)
         """
-        if scaling == "simple-linear":
+        if np.ma.isMaskedArray(data) and np.all(data.mask):
+            r, d, n = 0.0, 0, 0
+        elif scaling == "simple-linear":
             n = kwargs["nbit"]
             r, d = _get_parameters_simple_linear(data, n)
         elif scaling == "fixed-digit-linear":
@@ -83,14 +85,18 @@ class SimplePackingEncoder(BaseEncoder):
             # if the data contains NaN, encoding itself succeeds, but proper values
             # cannot be written out, so we raise an exception
             raise RuntimeError("data contains NaN values")
+        self._len = len(input_)
         dtype = self._determine_dtype()
-        encoded = (input_ * 10**self.d - self.r) * 2 ** (-self.e)
-        self._encoded = np.round(encoded).astype(dtype)
+        if self.n == 0:
+            self._encoded = np.array([], dtype=dtype)
+        else:
+            encoded = (input_ * 10**self.d - self.r) * 2 ** (-self.e)
+            self._encoded = np.round(encoded).astype(dtype)
         self._bitmap = bitmap
         return (self._encoded, self._bitmap)
 
     def _determine_dtype(self):
-        if self.n == 8:
+        if self.n == 0 or self.n == 8:
             return ">u1"
         elif self.n == 16:
             return ">u2"
@@ -99,12 +105,12 @@ class SimplePackingEncoder(BaseEncoder):
         elif self.n == 64:
             return ">u8"
         else:
-            raise RuntimeError("n other than 8, 16, 32, and 64 is not supported")
+            raise RuntimeError("n other than 0, 8, 16, 32, and 64 is not supported")
 
     def write_sect5(self, f: BinaryIO) -> int:
         """Writes parameter data to the stream as Section 5 octet sequence."""
-        encoded, _ = self.encode()
-        num_of_values = len(encoded)
+        _, _ = self.encode()
+        num_of_values = self._len
         main_dtype = np.dtype(
             [
                 ("num_of_values", ">u4"),
