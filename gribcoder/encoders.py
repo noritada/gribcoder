@@ -43,8 +43,12 @@ class SimplePackingEncoder(BaseEncoder):
         - "fixed-digit-linear" prepares an encoder with parameter sets for linear
           scaling for given "decimals" (number of decimal places; precision)
         """
-        if np.ma.isMaskedArray(data) and np.all(data.mask):
+        if np.ma.isMaskedArray(data) and data.mask.all():
             r, d, n = 0.0, 0, 0
+        elif np.ma.isMaskedArray(data) and _is_unique(values := data[~data.mask]):
+            r, d, n = values[0], 0, 0
+        elif _is_unique(data):
+            r, d, n = data[0], 0, 0
         elif scaling == "simple-linear":
             n = kwargs["nbit"]
             r, d = _get_parameters_simple_linear(data, n)
@@ -228,3 +232,7 @@ def create_bitmap(mask: NDArray[Shape["*"], Bool]) -> NDArray[Shape["*"], UInt8]
     array = np.pad(mask, (0, n_pad), constant_values=True).reshape(-1, 8)
     bits = np.packbits(~array, axis=-1).ravel()
     return bits
+
+
+def _is_unique(data: np.ndarray):
+    return (data == data[0]).all()
