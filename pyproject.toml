@@ -1,6 +1,5 @@
 [project]
 name = "gribcoder"
-version = "0.2.0"
 description = "Add your description here"
 authors = [
     { name = "Noritada Kobayashi", email = "noritada.kobayashi@gmail.com" }
@@ -11,6 +10,7 @@ dependencies = [
 ]
 readme = "README.md"
 requires-python = ">=3.8,<3.12"
+dynamic = ["version"]
 
 [build-system]
 requires = ["hatchling"]
@@ -28,6 +28,9 @@ dev-dependencies = [
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[tool.hatch.version]
+path = "gribcoder/__init__.py"
 
 [tool.isort]
 profile = "black"

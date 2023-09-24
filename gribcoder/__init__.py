@@ -11,6 +11,8 @@ from .product import (
     ProductDefinitionWithTemplate4_0,
 )
 
+__version__ = "0.2.0"
+
 __all__ = [
     "Grib2MessageWriter",
     "BaseEncoder",
