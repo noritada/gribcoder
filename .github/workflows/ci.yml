@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - testing
     paths:
       - ".github/workflows/*"
   pull_request:
