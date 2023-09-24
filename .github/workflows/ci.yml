@@ -31,8 +31,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          ${GITHUB_WORKSPACE}/.rye/shims/rye sync
+          "${HOME}/.rye/shims/rye" sync
 
       - name: Test with pytest
         run: |
-          ${GITHUB_WORKSPACE}/.rye/shims/rye run python -m pytest
+          "${HOME}/.rye/shims/rye" run python -m pytest
