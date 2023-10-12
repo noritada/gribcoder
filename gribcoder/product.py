@@ -40,10 +40,10 @@ DTYPE_SECTION_4_FORECAST_TIME = np.dtype(
 DTYPE_SECTION_4_HORIZONTAL = np.dtype(
     [
         ("type_of_first_fixed_surface", "u1"),
-        ("scale_factor_of_first_fixed_surface", "u1"),
+        ("scale_factor_of_first_fixed_surface", "u1"),  # grib_signed
         ("scale_value_of_first_fixed_surface", ">u4"),
         ("type_of_second_fixed_surface", "u1"),
-        ("scale_factor_of_second_fixed_surface", "u1"),
+        ("scale_factor_of_second_fixed_surface", "u1"),  # grib_signed
         ("scale_value_of_second_fixed_surface", ">u4"),
     ]
 )
