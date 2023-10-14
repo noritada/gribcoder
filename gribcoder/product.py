@@ -37,14 +37,11 @@ DTYPE_SECTION_4_FORECAST_TIME = np.dtype(
     ]
 )
 
-DTYPE_SECTION_4_HORIZONTAL = np.dtype(
+DTYPE_SECTION_4_FIXED_SURFACE = np.dtype(
     [
-        ("type_of_first_fixed_surface", "u1"),
-        ("scale_factor_of_first_fixed_surface", "u1"),  # grib_signed
-        ("scale_value_of_first_fixed_surface", ">u4"),
-        ("type_of_second_fixed_surface", "u1"),
-        ("scale_factor_of_second_fixed_surface", "u1"),  # grib_signed
-        ("scale_value_of_second_fixed_surface", ">u4"),
+        ("type_of_fixed_surface", "u1"),
+        ("scale_factor_of_fixed_surface", "u1"),  # grib_signed
+        ("scale_value_of_fixed_surface", ">u4"),
     ]
 )
 
@@ -88,9 +85,9 @@ class ProductDefinitionWithTemplate4_0:
         return self
 
     def horizontal(self, values: np.ndarray):  # `-> Self` for Python >=3.11 (PEP 673)
-        if values.dtype != DTYPE_SECTION_4_HORIZONTAL:
+        if values.dtype != DTYPE_SECTION_4_FIXED_SURFACE:
             raise RuntimeError("wrong dtype")
-        if len(values) != 1:
+        if len(values) != 2:
             raise RuntimeError("wrong length")
         self._horizontal = values
         return self
@@ -107,7 +104,7 @@ class ProductDefinitionWithTemplate4_0:
             + DTYPE_SECTION_4_PARAMETER.itemsize
             + DTYPE_SECTION_4_GENERATING_PROCESS.itemsize
             + DTYPE_SECTION_4_FORECAST_TIME.itemsize
-            + DTYPE_SECTION_4_HORIZONTAL.itemsize
+            + DTYPE_SECTION_4_FIXED_SURFACE.itemsize * 2
         )
 
         header = create_sect_header(4, sect_len)
