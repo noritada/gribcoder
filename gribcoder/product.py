@@ -47,9 +47,9 @@ _DTYPE_SECTION_4_FIXED_SURFACE = np.dtype(
 
 
 class FixedSurface(NamedTuple):
-    type_of_fixed_surface: int
-    scale_factor_of_fixed_surface: int
-    scale_value_of_fixed_surface: int
+    type: int
+    scale_factor: int
+    scale_value: int
 
 
 NULL_FIXED_SURFACE = FixedSurface(0xFF, 0xFF, 0xFFFFFFFF)
@@ -101,9 +101,9 @@ class ProductDefinitionWithTemplate4_0:
             if fs is None
             else [
                 FixedSurface(
-                    fs.type_of_fixed_surface,
-                    grib_signed(fs.scale_factor_of_fixed_surface, 1),
-                    fs.scale_value_of_fixed_surface,
+                    fs.type,
+                    grib_signed(fs.scale_factor, 1),
+                    fs.scale_value,
                 )
             ]
             for fs in surfaces
