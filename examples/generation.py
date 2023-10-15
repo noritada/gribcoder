@@ -61,9 +61,9 @@ def generate_grib2(grid_lats, grid_lons, grid_alts, regridded, time):
                             )
                         )
                         .horizontal(
-                            np.array(
-                                [[(101, 0, alt)], [(0xFF, 0xFF, 0xFFFFFFFF)]],
-                                dtype=gribcoder.DTYPE_SECTION_4_FIXED_SURFACE,
+                            (
+                                gribcoder.FixedSurface(101, 0, alt),
+                                gribcoder.NULL_FIXED_SURFACE,
                             )
                         )
                     )

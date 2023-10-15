@@ -1,10 +1,9 @@
 from io import BytesIO
 
-import numpy as np
 import pytest
 
-from gribcoder import DTYPE_SECTION_4_FIXED_SURFACE, ProductDefinitionWithTemplate4_0
-from gribcoder.utils import grib_signed, write
+from gribcoder import NULL_FIXED_SURFACE, FixedSurface, ProductDefinitionWithTemplate4_0
+from gribcoder.utils import write
 
 
 @pytest.mark.parametrize(
@@ -13,13 +12,7 @@ from gribcoder.utils import grib_signed, write
 )
 def test_writing_horizontal(scale, expected_byte):
     product = ProductDefinitionWithTemplate4_0(0).horizontal(
-        np.array(
-            [
-                [(101, grib_signed(scale, 1), 2)],
-                [(0xFF, 0xFF, 0xFFFFFFFF)],
-            ],
-            dtype=DTYPE_SECTION_4_FIXED_SURFACE,
-        )
+        (FixedSurface(101, scale, 2), NULL_FIXED_SURFACE)
     )
 
     with BytesIO() as f:

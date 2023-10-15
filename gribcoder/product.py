@@ -1,10 +1,10 @@
 import dataclasses
 from abc import ABC, abstractmethod
-from typing import BinaryIO
+from typing import BinaryIO, NamedTuple
 
 import numpy as np
 
-from .utils import SECT_HEADER_DTYPE, create_sect_header, write
+from .utils import SECT_HEADER_DTYPE, create_sect_header, grib_signed, write
 
 DTYPE_SECTION_4 = np.dtype(
     [
@@ -37,13 +37,22 @@ DTYPE_SECTION_4_FORECAST_TIME = np.dtype(
     ]
 )
 
-DTYPE_SECTION_4_FIXED_SURFACE = np.dtype(
+_DTYPE_SECTION_4_FIXED_SURFACE = np.dtype(
     [
         ("type_of_fixed_surface", "u1"),
         ("scale_factor_of_fixed_surface", "u1"),  # grib_signed
         ("scale_value_of_fixed_surface", ">u4"),
     ]
 )
+
+
+class FixedSurface(NamedTuple):
+    type_of_fixed_surface: int
+    scale_factor_of_fixed_surface: int
+    scale_value_of_fixed_surface: int
+
+
+NULL_FIXED_SURFACE = FixedSurface(0xFF, 0xFF, 0xFFFFFFFF)
 
 
 class BaseProductDefinition(ABC):
@@ -84,9 +93,24 @@ class ProductDefinitionWithTemplate4_0:
         self._forecast_time = values
         return self
 
-    def horizontal(self, values: np.ndarray):  # `-> Self` for Python >=3.11 (PEP 673)
-        if values.dtype != DTYPE_SECTION_4_FIXED_SURFACE:
-            raise RuntimeError("wrong dtype")
+    def horizontal(
+        self, surfaces: tuple[FixedSurface | None, FixedSurface | None]
+    ):  # `-> Self` for Python >=3.11 (PEP 673)
+        surfaces_ = [
+            [NULL_FIXED_SURFACE]
+            if fs is None
+            else [
+                FixedSurface(
+                    fs.type_of_fixed_surface,
+                    grib_signed(fs.scale_factor_of_fixed_surface, 1),
+                    fs.scale_value_of_fixed_surface,
+                )
+            ]
+            for fs in surfaces
+        ]
+
+        values = np.array(surfaces_, dtype=_DTYPE_SECTION_4_FIXED_SURFACE)
+
         if len(values) != 2:
             raise RuntimeError("wrong length")
         self._horizontal = values
@@ -104,7 +128,7 @@ class ProductDefinitionWithTemplate4_0:
             + DTYPE_SECTION_4_PARAMETER.itemsize
             + DTYPE_SECTION_4_GENERATING_PROCESS.itemsize
             + DTYPE_SECTION_4_FORECAST_TIME.itemsize
-            + DTYPE_SECTION_4_FIXED_SURFACE.itemsize * 2
+            + _DTYPE_SECTION_4_FIXED_SURFACE.itemsize * 2
         )
 
         header = create_sect_header(4, sect_len)
