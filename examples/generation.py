@@ -43,9 +43,8 @@ def generate_grib2(grid_lats, grid_lons, grid_alts, regridded, time):
                     product = (
                         gribcoder.ProductDefinitionWithTemplate4_0(0)
                         .parameter(
-                            np.array(
-                                [(elem.parameter_category, elem.parameter_number)],
-                                dtype=gribcoder.DTYPE_SECTION_4_PARAMETER,
+                            gribcoder.ProductParameter(
+                                elem.parameter_category, elem.parameter_number
                             )
                         )
                         .generating_process(

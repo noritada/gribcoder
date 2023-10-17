@@ -13,7 +13,7 @@ DTYPE_SECTION_4 = np.dtype(
     ]
 )
 
-DTYPE_SECTION_4_PARAMETER = np.dtype(
+_DTYPE_SECTION_4_PARAMETER = np.dtype(
     [
         ("parameter_category", "u1"),
         ("parameter_number", "u1"),
@@ -46,6 +46,11 @@ _DTYPE_SECTION_4_FIXED_SURFACE = np.dtype(
 )
 
 
+class ProductParameter(NamedTuple):
+    category: int
+    number: int
+
+
 class FixedSurface(NamedTuple):
     type: int
     scale_factor: int
@@ -65,12 +70,10 @@ class BaseProductDefinition(ABC):
 class ProductDefinitionWithTemplate4_0:
     nv: int
 
-    def parameter(self, values: np.ndarray):  # `-> Self` for Python >=3.11 (PEP 673)
-        if values.dtype != DTYPE_SECTION_4_PARAMETER:
-            raise RuntimeError("wrong dtype")
-        if len(values) != 1:
-            raise RuntimeError("wrong length")
-        self._parameter = values
+    def parameter(
+        self, param: ProductParameter
+    ):  # `-> Self` for Python >=3.11 (PEP 673)
+        self._parameter = np.array([param], dtype=_DTYPE_SECTION_4_PARAMETER)
         return self
 
     def generating_process(
@@ -125,7 +128,7 @@ class ProductDefinitionWithTemplate4_0:
         sect_len = (
             SECT_HEADER_DTYPE.itemsize
             + DTYPE_SECTION_4.itemsize
-            + DTYPE_SECTION_4_PARAMETER.itemsize
+            + _DTYPE_SECTION_4_PARAMETER.itemsize
             + DTYPE_SECTION_4_GENERATING_PROCESS.itemsize
             + DTYPE_SECTION_4_FORECAST_TIME.itemsize
             + _DTYPE_SECTION_4_FIXED_SURFACE.itemsize * 2

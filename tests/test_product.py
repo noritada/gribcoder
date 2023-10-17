@@ -1,24 +1,18 @@
 from io import BytesIO
 
-import numpy as np
 import pytest
 
 from gribcoder import (
-    DTYPE_SECTION_4_PARAMETER,
     NULL_FIXED_SURFACE,
     FixedSurface,
     ProductDefinitionWithTemplate4_0,
+    ProductParameter,
 )
 from gribcoder.utils import write
 
 
 def test_writing_parameter():
-    product = ProductDefinitionWithTemplate4_0(0).parameter(
-        np.array(
-            [(0, 1)],
-            dtype=DTYPE_SECTION_4_PARAMETER,
-        )
-    )
+    product = ProductDefinitionWithTemplate4_0(0).parameter(ProductParameter(0, 1))
 
     with BytesIO() as f:
         write(f, product._parameter)
