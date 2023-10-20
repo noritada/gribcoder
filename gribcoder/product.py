@@ -1,6 +1,6 @@
 import dataclasses
 from abc import ABC, abstractmethod
-from typing import BinaryIO, NamedTuple
+from typing import BinaryIO, NamedTuple, Optional
 
 import numpy as np
 
@@ -97,7 +97,10 @@ class ProductDefinitionWithTemplate4_0:
         return self
 
     def horizontal(
-        self, surfaces: tuple[FixedSurface | None, FixedSurface | None]
+        self,
+        surfaces: tuple[
+            Optional[FixedSurface], Optional[FixedSurface]
+        ],  # PEP 604 (`A | B` syntax) is not supported in Python <3.10
     ):  # `-> Self` for Python >=3.11 (PEP 673)
         surfaces_ = [
             [NULL_FIXED_SURFACE]
