@@ -1,21 +1,19 @@
-import dataclasses
 from datetime import datetime
 from io import BytesIO
+from typing import NamedTuple
 
 import numpy as np
 
 import gribcoder
 
 
-@dataclasses.dataclass
-class Element:
+class Element(NamedTuple):
     name: str
-    parameter_category: int
-    parameter_number: int
+    parameter: gribcoder.ProductParameter
 
 
 ELEMENTS = [
-    Element("TEMP", 0, 0),
+    Element("TEMP", gribcoder.ProductParameter(0, 0)),
 ]
 
 
@@ -42,11 +40,7 @@ def generate_grib2(grid_lats, grid_lons, grid_alts, regridded, time):
                         continue
                     product = (
                         gribcoder.ProductDefinitionWithTemplate4_0(0)
-                        .parameter(
-                            gribcoder.ProductParameter(
-                                elem.parameter_category, elem.parameter_number
-                            )
-                        )
+                        .parameter(elem.parameter)
                         .generating_process(
                             np.array(
                                 [(0, 0xFF, 0xFF)],
