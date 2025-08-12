@@ -2,7 +2,7 @@
 name = "gribcoder"
 description = "Add your description here"
 authors = [
-    { name = "Noritada Kobayashi", email = "noritada.kobayashi@gmail.com" }
+    { name = "Noritada Kobayashi", email = "noritada.kobayashi@gmail.com" },
 ]
 dependencies = [
     "nptyping>=2.3",
@@ -22,8 +22,8 @@ dev-dependencies = [
     "black>=22",
     "flake8>=5",
     "isort>=5",
-    "pytest>=7.1.3",
     "mypy>=1.4.1",
+    "pytest>=7.1.3",
 ]
 
 [tool.hatch.metadata]

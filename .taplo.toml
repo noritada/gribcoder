@@ -1,0 +1,4 @@
+[formatting]
+array_auto_collapse = false
+indent_string = "    "
+reorder_arrays = true
