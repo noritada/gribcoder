@@ -25,17 +25,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Rye
-        run: |
-          curl -sSf https://rye-up.com/get | RYE_INSTALL_OPTION="--yes" bash
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Install dependencies
         run: |
-          "${HOME}/.rye/shims/rye" sync
+          uv sync
 
       - name: Test with pytest
         run: |
-          "${HOME}/.rye/shims/rye" run python -m pytest
+          uv run python -m pytest
 
   examples:
     runs-on: ubuntu-latest
